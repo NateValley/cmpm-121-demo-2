@@ -93,3 +93,12 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+canvas {
+  border: 2px solid black;
+  background-color: lightgray;
+  filter: drop-shadow(30px 10px 4px)
+}
+
+
+
