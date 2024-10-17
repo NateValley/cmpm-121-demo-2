@@ -24,8 +24,17 @@ const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear";
 app.append(clearButton);
 
+const undoButton = document.createElement("button");
+undoButton.innerHTML = "Undo";
+app.append(undoButton);
+
+const redoButton = document.createElement("button");
+redoButton.innerHTML = "Redo";
+app.append(redoButton);
+
 const changedEvent = new Event("drawing-changed");
 let strokeIndex = 0;
+let undoneStrokes: number[][][] = [];
 
 webCanvas.addEventListener("drawing-changed", (event) => {
     context.clearRect(0, 0, 256, 256);
@@ -63,7 +72,26 @@ globalThis.addEventListener("mouseup", (event) => {
 clearButton.addEventListener("click", () => {
     context.clearRect(0, 0, 256, 256);
     pointsArray = [];
+    undoneStrokes = [];
     strokeIndex = 0;
+});
+
+undoButton.addEventListener("click", () => {
+    if (pointsArray.length != 0)
+    {
+        undoneStrokes.push(pointsArray.pop()!);
+        strokeIndex--;
+        webCanvas.dispatchEvent(changedEvent);
+    }
+});
+
+redoButton.addEventListener("click", () => {
+    if (undoneStrokes.length != 0)
+    {
+        pointsArray.push(undoneStrokes.pop()!);
+        strokeIndex++;
+        webCanvas.dispatchEvent(changedEvent);
+    }
 });
 
 function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
