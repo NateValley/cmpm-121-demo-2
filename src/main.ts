@@ -10,8 +10,8 @@ const webTitle = document.createElement("h1");
 app.append(webTitle);
 
 let isDrawing = false;
-let x = 0;
-let y = 0;
+
+let pointsArray: number[][][] = []
 
 const webCanvas = document.createElement("canvas");
 webCanvas.width = 256;
@@ -24,31 +24,49 @@ const clearButton = document.createElement("button");
 clearButton.innerHTML = "Clear";
 app.append(clearButton);
 
+const changedEvent = new Event("drawing-changed");
+let strokeIndex = 0;
+
+webCanvas.addEventListener("drawing-changed", (event) => {
+    console.log("dispatched");
+    console.log(pointsArray);
+
+    context.clearRect(0, 0, 256, 256);
+
+    for (let i = 0; i < pointsArray.length; i++)
+    {
+        for (let j = 1; j < pointsArray[i].length; j++)
+        {
+            drawLine(context, pointsArray[i][j-1][0], pointsArray[i][j-1][1], pointsArray[i][j][0], pointsArray[i][j][1]);
+        }
+    }
+});
+
 webCanvas.addEventListener("mousedown", (event) => {
-    x = event.offsetX;
-    y = event.offsetY;
+    pointsArray.push([]);
+    pointsArray[strokeIndex].push([event.offsetX, event.offsetY]);
+    webCanvas.dispatchEvent(changedEvent)
     isDrawing = true;
 });
 
 webCanvas.addEventListener("mousemove", (event) => {
     if (isDrawing) {
-        drawLine(context, x, y, event.offsetX, event.offsetY);
-        x = event.offsetX;
-        y = event.offsetY;
+        pointsArray[strokeIndex].push([event.offsetX, event.offsetY]);
+        webCanvas.dispatchEvent(changedEvent)
     }
 });
 
 globalThis.addEventListener("mouseup", (event) => {
     if (isDrawing) {
-        drawLine(context, x, y, event.offsetX, event.offsetY);
-        x = 0;
-        y = 0;
+        strokeIndex++;
         isDrawing = false;
     }
 });
 
 clearButton.addEventListener("click", () => {
-    context.clearRect(x, y, 256, 256);
+    context.clearRect(0, 0, 256, 256);
+    pointsArray = [];
+    strokeIndex = 0;
 });
 
 function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
