@@ -28,9 +28,6 @@ const changedEvent = new Event("drawing-changed");
 let strokeIndex = 0;
 
 webCanvas.addEventListener("drawing-changed", (event) => {
-    console.log("dispatched");
-    console.log(pointsArray);
-
     context.clearRect(0, 0, 256, 256);
 
     for (let i = 0; i < pointsArray.length; i++)
