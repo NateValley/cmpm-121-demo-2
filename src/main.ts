@@ -27,15 +27,28 @@ app.append(clearButton);
 const undoButton = document.createElement("button");
 undoButton.innerHTML = "Undo";
 app.append(undoButton);
+undoButton.disabled = true;
 
 const redoButton = document.createElement("button");
 redoButton.innerHTML = "Redo";
 app.append(redoButton);
+redoButton.disabled = true;
+
+const thinButton = document.createElement("button");
+thinButton.innerHTML = "Thin";
+app.append(thinButton);
+thinButton.disabled = true;
+
+const thiccButton = document.createElement("button");
+thiccButton.innerHTML = "Thicc";
+app.append(thiccButton);
 
 let currentStroke: ReturnType<typeof createStroke> | null = null;
+let currentWidth: number = 1;
 
 let displayArray: Displayable[] = [];
 let undoneDisplays: Displayable[] = [];
+
 
 interface Displayable {
     display (context: CanvasRenderingContext2D): void;
@@ -44,6 +57,7 @@ interface Displayable {
 
 function createStroke(): Displayable {
     const points: { x: number; y: number }[] = [];
+    const width = currentWidth;
 
     function addPoint(x: number, y: number) {
         points.push({ x, y });
@@ -53,7 +67,7 @@ function createStroke(): Displayable {
         if (points.length < 2) return;
 
         for (let i = 0; i < points.length - 1; i++) {
-            drawLine(context, points[i].x, points[i].y, points[i+1].x, points[i+1].y);
+            drawLine(context, points[i].x, points[i].y, points[i+1].x, points[i+1].y, width);
         }
     }
 
@@ -69,8 +83,23 @@ function displayAll(context: CanvasRenderingContext2D) {
 }
 
 webCanvas.addEventListener("drawing-changed", (event) => {
-    context.clearRect(0, 0, 256, 256);
     displayAll(context);
+    
+    if (displayArray.length != 0) {
+        undoButton.disabled = false;
+    }
+    else
+    {
+        undoButton.disabled = true;
+    }
+
+    if (undoneDisplays.length != 0) {
+        redoButton.disabled = false;
+    }
+    else
+    {
+        redoButton.disabled = true;
+    }
 });
 
 webCanvas.addEventListener("mousedown", (event) => {
@@ -78,12 +107,14 @@ webCanvas.addEventListener("mousedown", (event) => {
     currentStroke.addPoint(event.offsetX, event.offsetY);
     displayArray.push(currentStroke);
     isDrawing = true;
+    undoneDisplays = [];
 });
 
 webCanvas.addEventListener("mousemove", (event) => {
     if (isDrawing && currentStroke) {
         currentStroke.addPoint(event.offsetX, event.offsetY);
         displayAll(context);
+        webCanvas.dispatchEvent(changedEvent);
     }
 });
 
@@ -116,12 +147,24 @@ redoButton.addEventListener("click", () => {
     }
 });
 
-function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
+function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width: number) {
     context.beginPath();
     context.strokeStyle = "black";
-    context.lineWidth = 1;
+    context.lineWidth = width;
     context.moveTo(x1, y1);
     context.lineTo(x2, y2);
     context.stroke();
     context.closePath();
 }
+
+thinButton.addEventListener("click", () => {
+    currentWidth = 1;
+    thinButton.disabled = true;
+    thiccButton.disabled = false;
+});
+
+thiccButton.addEventListener("click", () => {
+    currentWidth = 4;
+    thiccButton.disabled = true;
+    thinButton.disabled = false;
+});
