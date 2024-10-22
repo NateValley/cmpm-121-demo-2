@@ -82,6 +82,16 @@ function displayAll(context: CanvasRenderingContext2D) {
     displayArray.forEach(stroke => stroke.display(context));
 }
 
+function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width: number) {
+    context.beginPath();
+    context.strokeStyle = "black";
+    context.lineWidth = width;
+    context.moveTo(x1, y1);
+    context.lineTo(x2, y2);
+    context.stroke();
+    context.closePath();
+}
+
 webCanvas.addEventListener("drawing-changed", (event) => {
     displayAll(context);
     
@@ -146,16 +156,6 @@ redoButton.addEventListener("click", () => {
         webCanvas.dispatchEvent(changedEvent);
     }
 });
-
-function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width: number) {
-    context.beginPath();
-    context.strokeStyle = "black";
-    context.lineWidth = width;
-    context.moveTo(x1, y1);
-    context.lineTo(x2, y2);
-    context.stroke();
-    context.closePath();
-}
 
 thinButton.addEventListener("click", () => {
     currentWidth = 1;
