@@ -11,7 +11,10 @@ app.append(webTitle);
 
 let isDrawing = false;
 
-let pointsArray: number[][][] = []
+// let pointsArray: MarkerObject[] = []
+// let undoneDisplays: MarkerObject[] = [];
+
+const changedEvent = new Event("drawing-changed");
 
 const webCanvas = document.createElement("canvas");
 webCanvas.width = 256;
@@ -32,64 +35,104 @@ const redoButton = document.createElement("button");
 redoButton.innerHTML = "Redo";
 app.append(redoButton);
 
-const changedEvent = new Event("drawing-changed");
-let strokeIndex = 0;
-let undoneStrokes: number[][][] = [];
+let currentStroke: ReturnType<typeof createStroke> | null = null;
+
+let displayArray: Displayable[] = [];
+let undoneDisplays: Displayable[] = [];
+
+interface Displayable {
+    display (context: CanvasRenderingContext2D): void;
+    addPoint (x: number, y: number): void;
+}
+
+function createStroke(): Displayable {
+    const points: { x: number; y: number }[] = [];
+
+    function addPoint(x: number, y: number) {
+        points.push({ x, y });
+    }
+
+    function display(context: CanvasRenderingContext2D) {
+        if (points.length < 2) return;
+
+        for (let i = 0; i < points.length - 1; i++) {
+            drawLine(context, points[i].x, points[i].y, points[i+1].x, points[i+1].y);
+        }
+    }
+
+    return {
+        display,
+        addPoint
+    };
+}
+
+function displayAll(context: CanvasRenderingContext2D) {
+    context.clearRect(0, 0, 256, 256);
+    displayArray.forEach(stroke => stroke.display(context));
+}
 
 webCanvas.addEventListener("drawing-changed", (event) => {
     context.clearRect(0, 0, 256, 256);
-
-    for (let i = 0; i < pointsArray.length; i++)
-    {
-        for (let j = 1; j < pointsArray[i].length; j++)
-        {
-            drawLine(context, pointsArray[i][j-1][0], pointsArray[i][j-1][1], pointsArray[i][j][0], pointsArray[i][j][1]);
-        }
-    }
+    displayAll(context);
 });
 
 webCanvas.addEventListener("mousedown", (event) => {
-    pointsArray.push([]);
-    pointsArray[strokeIndex].push([event.offsetX, event.offsetY]);
-    webCanvas.dispatchEvent(changedEvent)
+    // const startPoint = new MarkerObject();
+    // startPoint.x = event.offsetX;
+    // startPoint.y = event.offsetY;
+    // pointsArray.push(startPoint);
+    // isDrawing = true;
+    // webCanvas.dispatchEvent(changedEvent);
+
+    currentStroke = createStroke();
+    currentStroke.addPoint(event.offsetX, event.offsetY);
+    displayArray.push(currentStroke);
     isDrawing = true;
 });
 
 webCanvas.addEventListener("mousemove", (event) => {
-    if (isDrawing) {
-        pointsArray[strokeIndex].push([event.offsetX, event.offsetY]);
-        webCanvas.dispatchEvent(changedEvent)
+    if (isDrawing && currentStroke) {
+        // const currentPoint = new MarkerObject();
+        // currentPoint.x = event.offsetX;
+        // currentPoint.y = event.offsetY;
+
+        // if (pointsArray.length > 0) {
+        //     webCanvas.dispatchEvent(changedEvent);
+        // }
+
+        // pointsArray.push(currentPoint);
+
+        currentStroke.addPoint(event.offsetX, event.offsetY);
+        displayAll(context);
     }
 });
 
 globalThis.addEventListener("mouseup", (event) => {
     if (isDrawing) {
-        strokeIndex++;
         isDrawing = false;
+        currentStroke = null;
     }
 });
 
 clearButton.addEventListener("click", () => {
     context.clearRect(0, 0, 256, 256);
-    pointsArray = [];
-    undoneStrokes = [];
+    displayArray = [];
+    undoneDisplays = [];
     strokeIndex = 0;
 });
 
 undoButton.addEventListener("click", () => {
-    if (pointsArray.length != 0)
+    if (displayArray.length != 0)
     {
-        undoneStrokes.push(pointsArray.pop()!);
-        strokeIndex--;
+        undoneDisplays.push(displayArray.pop()!);
         webCanvas.dispatchEvent(changedEvent);
     }
 });
 
 redoButton.addEventListener("click", () => {
-    if (undoneStrokes.length != 0)
+    if (undoneDisplays.length != 0)
     {
-        pointsArray.push(undoneStrokes.pop()!);
-        strokeIndex++;
+        displayArray.push(undoneDisplays.pop()!);
         webCanvas.dispatchEvent(changedEvent);
     }
 });
