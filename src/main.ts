@@ -11,9 +11,6 @@ app.append(webTitle);
 
 let isDrawing = false;
 
-// let pointsArray: MarkerObject[] = []
-// let undoneDisplays: MarkerObject[] = [];
-
 const changedEvent = new Event("drawing-changed");
 
 const webCanvas = document.createElement("canvas");
@@ -77,13 +74,6 @@ webCanvas.addEventListener("drawing-changed", (event) => {
 });
 
 webCanvas.addEventListener("mousedown", (event) => {
-    // const startPoint = new MarkerObject();
-    // startPoint.x = event.offsetX;
-    // startPoint.y = event.offsetY;
-    // pointsArray.push(startPoint);
-    // isDrawing = true;
-    // webCanvas.dispatchEvent(changedEvent);
-
     currentStroke = createStroke();
     currentStroke.addPoint(event.offsetX, event.offsetY);
     displayArray.push(currentStroke);
@@ -92,16 +82,6 @@ webCanvas.addEventListener("mousedown", (event) => {
 
 webCanvas.addEventListener("mousemove", (event) => {
     if (isDrawing && currentStroke) {
-        // const currentPoint = new MarkerObject();
-        // currentPoint.x = event.offsetX;
-        // currentPoint.y = event.offsetY;
-
-        // if (pointsArray.length > 0) {
-        //     webCanvas.dispatchEvent(changedEvent);
-        // }
-
-        // pointsArray.push(currentPoint);
-
         currentStroke.addPoint(event.offsetX, event.offsetY);
         displayAll(context);
     }
@@ -118,7 +98,6 @@ clearButton.addEventListener("click", () => {
     context.clearRect(0, 0, 256, 256);
     displayArray = [];
     undoneDisplays = [];
-    strokeIndex = 0;
 });
 
 undoButton.addEventListener("click", () => {
