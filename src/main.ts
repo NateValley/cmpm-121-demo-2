@@ -52,16 +52,24 @@ let undoneDisplays: Displayable[] = [];
 
 interface Displayable {
     display (context: CanvasRenderingContext2D): void;
-    addPoint (x: number, y: number): void;
 }
 
-function createStroke(): Displayable {
+function createToolPreview(mouseX: number, mouseY: number): Displayable {
+    return {
+        display: (context: CanvasRenderingContext2D) => {
+            context.save();
+            context.beginPath();
+            context.arc(mouseX, mouseY, 10 ,0, Math.PI * 2);
+            context.fillStyle = "rgba(0, 0, 0, 0.3)";
+            context.fill();
+            context.restore();
+        }
+    };
+}
+
+function createStroke(): Displayable & { addPoint (x: number, y: number): void } {
     const points: { x: number; y: number }[] = [];
     const width = currentWidth;
-
-    function addPoint(x: number, y: number) {
-        points.push({ x, y });
-    }
 
     function display(context: CanvasRenderingContext2D) {
         if (points.length < 2) return;
@@ -73,7 +81,9 @@ function createStroke(): Displayable {
 
     return {
         display,
-        addPoint
+        addPoint: (x: number, y: number): void => {
+            points.push({ x, y });
+        }
     };
 }
 
@@ -92,8 +102,11 @@ function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2
     context.closePath();
 }
 
+let activeToolPreview: Displayable | null = null;
+
 webCanvas.addEventListener("drawing-changed", (event) => {
     displayAll(context);
+    activeToolPreview?.display(context);
     
     if (displayArray.length != 0) {
         undoButton.disabled = false;
@@ -112,20 +125,50 @@ webCanvas.addEventListener("drawing-changed", (event) => {
     }
 });
 
+webCanvas.addEventListener("tool-moved", (event) => {
+    const detail = (event as CustomEvent).detail;
+    const { x, y } = detail;
+
+    if (!isDrawing) {
+        activeToolPreview = createToolPreview(x, y);
+        displayAll(context);
+        webCanvas.style.cursor = "none";
+    }
+    else
+    {
+        webCanvas.style.cursor = "default";
+    }
+});
+
 webCanvas.addEventListener("mousedown", (event) => {
     currentStroke = createStroke();
     currentStroke.addPoint(event.offsetX, event.offsetY);
     displayArray.push(currentStroke);
     isDrawing = true;
     undoneDisplays = [];
+    activeToolPreview = null;
 });
 
 webCanvas.addEventListener("mousemove", (event) => {
+    const rect = webCanvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    const toolMovedEvent = new CustomEvent("tool-moved", {
+        detail: { x: mouseX, y: mouseY }
+    });
+    
+    webCanvas.dispatchEvent(toolMovedEvent);
+
+    if (!isDrawing) {
+        activeToolPreview = createToolPreview(mouseX, mouseY);
+    }
+
     if (isDrawing && currentStroke) {
         currentStroke.addPoint(event.offsetX, event.offsetY);
-        displayAll(context);
-        webCanvas.dispatchEvent(changedEvent);
     }
+
+    webCanvas.dispatchEvent(changedEvent);
 });
 
 globalThis.addEventListener("mouseup", (event) => {
