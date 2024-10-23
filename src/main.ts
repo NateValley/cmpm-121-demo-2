@@ -1,6 +1,6 @@
 import "./style.css";
 
-const APP_NAME = "Bello!";
+const APP_NAME = "my sick and twisted mind if it was a canvas....";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 document.title = APP_NAME;
@@ -20,31 +20,84 @@ app.append(webCanvas);
 
 const context = <CanvasRenderingContext2D>webCanvas.getContext("2d");
 
-const clearButton = document.createElement("button");
-clearButton.innerHTML = "Clear";
-app.append(clearButton);
+const buttonsContainer = document.createElement("div");
+app.append(buttonsContainer);
 
+// Clear Button
+const clearButton = document.createElement("button");
+
+// Undo/Redo Buttons
 const undoButton = document.createElement("button");
-undoButton.innerHTML = "Undo";
-app.append(undoButton);
 undoButton.disabled = true;
 
 const redoButton = document.createElement("button");
-redoButton.innerHTML = "Redo";
-app.append(redoButton);
 redoButton.disabled = true;
 
+// Stroke Thickness Buttons
 const thinButton = document.createElement("button");
-thinButton.innerHTML = "Thin";
-app.append(thinButton);
 thinButton.disabled = true;
 
 const thiccButton = document.createElement("button");
-thiccButton.innerHTML = "Thicc";
-app.append(thiccButton);
+
+// Sticker Buttons
+const ratButton = document.createElement("button");
+const batButton = document.createElement("button");
+const catButton = document.createElement("button");
+
+interface buttonItem {
+    button: HTMLButtonElement;
+    buttonLabel: string;
+    isSticker: boolean;
+}
+
+const buttonArray: buttonItem[] = [
+    {
+        button: clearButton,
+        buttonLabel: "Clear",
+        isSticker: false
+    },
+    {
+        button: undoButton,
+        buttonLabel: "Undo",
+        isSticker: false
+    },
+    {
+        button: redoButton,
+        buttonLabel: "Redo",
+        isSticker: false
+    },
+    {
+        button: thinButton,
+        buttonLabel: "Thin",
+        isSticker: false
+    },
+    {
+        button: thiccButton,
+        buttonLabel: "Thicc",
+        isSticker: false
+    },
+    {
+        button: ratButton,
+        buttonLabel: "🐀",
+        isSticker: true
+    },
+    {
+        button: batButton,
+        buttonLabel: "🦇",
+        isSticker: true
+    },
+    {
+        button: catButton,
+        buttonLabel: "🐈‍⬛",
+        isSticker: true
+    }
+]
+
 
 let currentStroke: ReturnType<typeof createStroke> | null = null;
 let currentWidth: number = 1;
+
+let currentSticker: ReturnType<typeof createSticker> | null = null;
 
 let displayArray: Displayable[] = [];
 let undoneDisplays: Displayable[] = [];
@@ -67,6 +120,17 @@ function createToolPreview(mouseX: number, mouseY: number): Displayable {
     };
 }
 
+function createStickerPreview(mouseX: number, mouseY: number, sticker: string): Displayable {
+    return {
+        display: (context: CanvasRenderingContext2D) => {
+            context.save();
+            context.font = "40px Arial";
+            context.fillText(sticker, mouseX, mouseY);
+            context.restore();
+        }
+    }
+}
+
 function createStroke(): Displayable & { addPoint (x: number, y: number): void } {
     const points: { x: number; y: number }[] = [];
     const width = currentWidth;
@@ -87,6 +151,16 @@ function createStroke(): Displayable & { addPoint (x: number, y: number): void }
     };
 }
 
+function createSticker(mouseX: number, mouseY: number, sticker: string): Displayable {
+
+    return {
+        display: (context: CanvasRenderingContext2D) => {
+            context.font = "40px Arial";
+            context.fillText(sticker, mouseX, mouseY);
+        }
+    }
+}
+
 function displayAll(context: CanvasRenderingContext2D) {
     context.clearRect(0, 0, 256, 256);
     displayArray.forEach(stroke => stroke.display(context));
@@ -103,6 +177,7 @@ function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2
 }
 
 let activeToolPreview: Displayable | null = null;
+let lastSticker: string;
 
 webCanvas.addEventListener("drawing-changed", (event) => {
     displayAll(context);
@@ -127,10 +202,25 @@ webCanvas.addEventListener("drawing-changed", (event) => {
 
 webCanvas.addEventListener("tool-moved", (event) => {
     const detail = (event as CustomEvent).detail;
-    const { x, y } = detail;
+    const { x, y, sticker } = detail;
+
+    if(sticker)
+    {
+        lastSticker = sticker;
+        console.log(sticker);
+    }
 
     if (!isDrawing) {
-        activeToolPreview = createToolPreview(x, y);
+
+        if (!lastSticker)
+        {
+            activeToolPreview = createToolPreview(x, y);
+        }
+        else
+        {
+            activeToolPreview = createStickerPreview(x, y, lastSticker);
+        }
+
         displayAll(context);
         webCanvas.style.cursor = "none";
     }
@@ -141,9 +231,20 @@ webCanvas.addEventListener("tool-moved", (event) => {
 });
 
 webCanvas.addEventListener("mousedown", (event) => {
-    currentStroke = createStroke();
-    currentStroke.addPoint(event.offsetX, event.offsetY);
-    displayArray.push(currentStroke);
+
+    if (lastSticker)
+    {
+        currentSticker = createSticker(event.offsetX, event.offsetY, lastSticker);
+        displayArray.push(currentSticker);
+        lastSticker = "";
+    }
+    else
+    {
+        currentStroke = createStroke();
+        currentStroke.addPoint(event.offsetX, event.offsetY);
+        displayArray.push(currentStroke);
+    }
+
     isDrawing = true;
     undoneDisplays = [];
     activeToolPreview = null;
@@ -207,3 +308,19 @@ thiccButton.addEventListener("click", () => {
     thiccButton.disabled = true;
     thinButton.disabled = false;
 });
+
+for (let i = 0; i < buttonArray.length; i++) {
+    buttonArray[i].button.style.fontSize = "20px";
+    buttonArray[i].button.innerHTML = buttonArray[i].buttonLabel;
+    buttonsContainer.append(buttonArray[i].button);
+
+    if (buttonArray[i].isSticker == true) {
+        buttonArray[i].button.addEventListener("click", function () {
+            const toolMovedEvent = new CustomEvent ("tool-moved",
+                { detail: { sticker: buttonArray[i].buttonLabel}
+            });
+
+            webCanvas.dispatchEvent(toolMovedEvent);
+        });
+    }
+}
