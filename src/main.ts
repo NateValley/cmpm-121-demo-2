@@ -160,10 +160,6 @@ webCanvas.addEventListener("mousemove", (event) => {
     
     webCanvas.dispatchEvent(toolMovedEvent);
 
-    if (!isDrawing) {
-        activeToolPreview = createToolPreview(mouseX, mouseY);
-    }
-
     if (isDrawing && currentStroke) {
         currentStroke.addPoint(event.offsetX, event.offsetY);
     }
