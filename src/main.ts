@@ -79,14 +79,16 @@ const buttonArray: buttonItem[] = [
     }
 ]
 
-
+// Drawing Variables
 let isDrawing = false;
 let currentStroke: ReturnType<typeof createStroke> | null = null;
 let currentWidth: number = 1;
 
+// Sticker Variables
 let currentSticker: ReturnType<typeof createSticker> | null = null;
-
 let stickerArray: string[] = ["🐀", "🦇", "🐈‍⬛"];
+
+// Displayable Variables
 let displayArray: Displayable[] = [];
 let undoneDisplays: Displayable[] = [];
 
@@ -310,11 +312,11 @@ customButton.addEventListener("click", () => {
 
 exportButton.addEventListener("click", () => {
     let tempCanvas = document.createElement("canvas");
+    let tempContext = <CanvasRenderingContext2D>tempCanvas.getContext("2d");
+    
     tempCanvas.width = 1024;
     tempCanvas.height = 1024;
 
-    let tempContext = <CanvasRenderingContext2D>tempCanvas.getContext("2d");
-    
     tempContext.scale(4, 4);
     displayAll(tempContext);
 
