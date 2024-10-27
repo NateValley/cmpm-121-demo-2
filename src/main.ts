@@ -37,8 +37,11 @@ thinButton.disabled = true;
 
 const thiccButton = document.createElement("button");
 
-// Sticker Buttons
+// Sticker Button
 const customButton = document.createElement("button");
+
+// Export Button
+const exportButton = document.createElement("button");
 
 interface buttonItem {
     button: HTMLButtonElement;
@@ -69,6 +72,10 @@ const buttonArray: buttonItem[] = [
     {
         button: customButton,
         buttonLabel: "+"
+    },
+    {
+        button: exportButton,
+        buttonLabel: "Export (.PNG)"
     }
 ]
 
@@ -299,6 +306,22 @@ customButton.addEventListener("click", () => {
         customButton.remove();
         buttonsContainer.append(customButton);
     }
+});
+
+exportButton.addEventListener("click", () => {
+    let tempCanvas = document.createElement("canvas");
+    tempCanvas.width = 1024;
+    tempCanvas.height = 1024;
+
+    let tempContext = <CanvasRenderingContext2D>tempCanvas.getContext("2d");
+    
+    tempContext.scale(4, 4);
+    displayAll(tempContext);
+
+    const anchor = document.createElement("a");
+    anchor.href = tempCanvas.toDataURL("image/png");
+    anchor.download = "twistedpad.png";
+    anchor.click();
 });
 
 for (let i = 0; i < buttonArray.length; i++) {
