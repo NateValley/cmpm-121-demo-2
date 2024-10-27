@@ -9,8 +9,6 @@ app.innerHTML = APP_NAME;
 const webTitle = document.createElement("h1");
 app.append(webTitle);
 
-let isDrawing = false;
-
 const changedEvent = new Event("drawing-changed");
 
 const webCanvas = document.createElement("canvas");
@@ -40,72 +38,48 @@ thinButton.disabled = true;
 const thiccButton = document.createElement("button");
 
 // Sticker Buttons
-const ratButton = document.createElement("button");
-const batButton = document.createElement("button");
-const catButton = document.createElement("button");
 const customButton = document.createElement("button");
 
 interface buttonItem {
     button: HTMLButtonElement;
     buttonLabel: string;
-    isSticker: boolean;
 }
 
 const buttonArray: buttonItem[] = [
     {
         button: clearButton,
-        buttonLabel: "Clear",
-        isSticker: false
+        buttonLabel: "Clear"
     },
     {
         button: undoButton,
-        buttonLabel: "Undo",
-        isSticker: false
+        buttonLabel: "Undo"
     },
     {
         button: redoButton,
-        buttonLabel: "Redo",
-        isSticker: false
+        buttonLabel: "Redo"
     },
     {
         button: thinButton,
-        buttonLabel: "Thin",
-        isSticker: false
+        buttonLabel: "Thin"
     },
     {
         button: thiccButton,
-        buttonLabel: "Thicc",
-        isSticker: false
-    },
-    {
-        button: ratButton,
-        buttonLabel: "🐀",
-        isSticker: true
-    },
-    {
-        button: batButton,
-        buttonLabel: "🦇",
-        isSticker: true
-    },
-    {
-        button: catButton,
-        buttonLabel: "🐈‍⬛",
-        isSticker: true
+        buttonLabel: "Thicc"
     },
     {
         button: customButton,
-        buttonLabel: "+",
-        isSticker: false
+        buttonLabel: "+"
     }
 ]
 
 
+let isDrawing = false;
 let currentStroke: ReturnType<typeof createStroke> | null = null;
 let currentWidth: number = 1;
 
 let currentSticker: ReturnType<typeof createSticker> | null = null;
 
-let stickerArray: string[] = [];
+let stickerArray: string[] = ["🐀", "🦇", "🐈‍⬛"];
 let displayArray: Displayable[] = [];
 let undoneDisplays: Displayable[] = [];
 
@@ -319,22 +293,24 @@ thiccButton.addEventListener("click", () => {
 customButton.addEventListener("click", () => {
     const customPrompt = String(window.prompt("Create a custom sticker:", "Insert text or emoji here... if you dare"));
 
-    createButton(customPrompt);
-    customButton.remove();
-    buttonsContainer.append(customButton);
+    if (customPrompt)
+    {
+        createButton(customPrompt);
+        customButton.remove();
+        buttonsContainer.append(customButton);
+    }
 });
 
 for (let i = 0; i < buttonArray.length; i++) {
 
-    if (buttonArray[i].isSticker == false) {
-        buttonArray[i].button.style.fontSize = "20px";
-        buttonArray[i].button.innerHTML = buttonArray[i].buttonLabel;
-        buttonsContainer.append(buttonArray[i].button);
-    }
-    else
-    {
-        createButton(buttonArray[i].buttonLabel);
-    }
+    buttonArray[i].button.style.fontSize = "20px";
+    buttonArray[i].button.innerHTML = buttonArray[i].buttonLabel;
+    buttonsContainer.append(buttonArray[i].button);
+}
+
+for (let i = 0; i < stickerArray.length; i++)
+{
+    createButton(stickerArray[i]);
 }
 
 function createButton (sticker: string) {
@@ -351,6 +327,16 @@ function createButton (sticker: string) {
         
         webCanvas.dispatchEvent(toolMovedEvent);
     });
+
+    for (let i = 0; i < stickerArray.length; i++)
+    {
+        if (stickerArray[i] == sticker)
+        {
+            customButton.remove();
+            buttonsContainer.append(customButton);
+            return;
+        }
+    }
 
     stickerArray.push(sticker);
 }
