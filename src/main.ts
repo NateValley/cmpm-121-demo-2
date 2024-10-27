@@ -19,7 +19,20 @@ app.append(webCanvas);
 const context = <CanvasRenderingContext2D>webCanvas.getContext("2d");
 
 const buttonsContainer = document.createElement("div");
+buttonsContainer.style.maxHeight = "60px";
+buttonsContainer.style.display = "flex";
+buttonsContainer.style.margin = "20px";
+buttonsContainer.style.justifyContent = "space-between";
+buttonsContainer.style.columnGap = "10px";
 app.append(buttonsContainer);
+
+const stickersContainer = document.createElement("div");
+stickersContainer.style.maxWidth = "60px";
+stickersContainer.style.display = "flex";
+stickersContainer.style.margin = "20px";
+stickersContainer.style.justifyContent = "space-between";
+stickersContainer.style.columnGap = "10px";
+app.append(stickersContainer);
 
 // Clear Button
 const clearButton = document.createElement("button");
@@ -82,15 +95,18 @@ const buttonArray: buttonItem[] = [
 // Drawing Variables
 let isDrawing = false;
 let currentStroke: ReturnType<typeof createStroke> | null = null;
-let currentWidth: number = 1;
+let currentWidth: number = 2;
 
 // Sticker Variables
 let currentSticker: ReturnType<typeof createSticker> | null = null;
 let stickerArray: string[] = ["🐀", "🦇", "🐈‍⬛"];
+let lastSticker: string;
 
 // Displayable Variables
 let displayArray: Displayable[] = [];
 let undoneDisplays: Displayable[] = [];
+let activeToolPreview: Displayable | null = null;
+
 
 
 interface Displayable {
@@ -165,9 +181,6 @@ function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2
     context.stroke();
     context.closePath();
 }
-
-let activeToolPreview: Displayable | null = null;
-let lastSticker: string;
 
 webCanvas.addEventListener("drawing-changed", (event) => {
     displayAll(context);
@@ -288,7 +301,7 @@ redoButton.addEventListener("click", () => {
 });
 
 thinButton.addEventListener("click", () => {
-    currentWidth = 1;
+    currentWidth = 2;
     thinButton.disabled = true;
     thiccButton.disabled = false;
 });
@@ -306,7 +319,7 @@ customButton.addEventListener("click", () => {
     {
         createButton(customPrompt);
         customButton.remove();
-        buttonsContainer.append(customButton);
+        stickersContainer.append(customButton);
     }
 });
 
@@ -328,7 +341,7 @@ exportButton.addEventListener("click", () => {
 
 for (let i = 0; i < buttonArray.length; i++) {
 
-    buttonArray[i].button.style.fontSize = "20px";
+    buttonArray[i].button.style.fontSize = "18px";
     buttonArray[i].button.innerHTML = buttonArray[i].buttonLabel;
     buttonsContainer.append(buttonArray[i].button);
 }
@@ -343,7 +356,7 @@ function createButton (sticker: string) {
 
     newButton.style.fontSize = "20px";
     newButton.innerHTML = sticker;
-    buttonsContainer.append(newButton);
+    stickersContainer.append(newButton);
 
     newButton.addEventListener("click", function () {
         const toolMovedEvent = new CustomEvent ("tool-moved",
@@ -358,7 +371,7 @@ function createButton (sticker: string) {
         if (stickerArray[i] == sticker)
         {
             customButton.remove();
-            buttonsContainer.append(customButton);
+            stickersContainer.append(customButton);
             return;
         }
     }
