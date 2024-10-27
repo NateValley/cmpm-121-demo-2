@@ -43,6 +43,7 @@ const thiccButton = document.createElement("button");
 const ratButton = document.createElement("button");
 const batButton = document.createElement("button");
 const catButton = document.createElement("button");
+const customButton = document.createElement("button");
 
 interface buttonItem {
     button: HTMLButtonElement;
@@ -90,6 +91,11 @@ const buttonArray: buttonItem[] = [
         button: catButton,
         buttonLabel: "🐈‍⬛",
         isSticker: true
+    },
+    {
+        button: customButton,
+        buttonLabel: "+",
+        isSticker: false
     }
 ]
 
@@ -99,6 +105,7 @@ let currentWidth: number = 1;
 
 let currentSticker: ReturnType<typeof createSticker> | null = null;
 
+let stickerArray: string[] = [];
 let displayArray: Displayable[] = [];
 let undoneDisplays: Displayable[] = [];
 
@@ -309,18 +316,41 @@ thiccButton.addEventListener("click", () => {
     thinButton.disabled = false;
 });
 
+customButton.addEventListener("click", () => {
+    const customPrompt = String(window.prompt("Create a custom sticker:", "Insert text or emoji here... if you dare"));
+
+    createButton(customPrompt);
+    customButton.remove();
+    buttonsContainer.append(customButton);
+});
+
 for (let i = 0; i < buttonArray.length; i++) {
-    buttonArray[i].button.style.fontSize = "20px";
-    buttonArray[i].button.innerHTML = buttonArray[i].buttonLabel;
-    buttonsContainer.append(buttonArray[i].button);
 
-    if (buttonArray[i].isSticker == true) {
-        buttonArray[i].button.addEventListener("click", function () {
-            const toolMovedEvent = new CustomEvent ("tool-moved",
-                { detail: { sticker: buttonArray[i].buttonLabel}
-            });
-
-            webCanvas.dispatchEvent(toolMovedEvent);
-        });
+    if (buttonArray[i].isSticker == false) {
+        buttonArray[i].button.style.fontSize = "20px";
+        buttonArray[i].button.innerHTML = buttonArray[i].buttonLabel;
+        buttonsContainer.append(buttonArray[i].button);
     }
+    else
+    {
+        createButton(buttonArray[i].buttonLabel);
+    }
+}
+
+function createButton (sticker: string) {
+    const newButton = document.createElement("button");
+
+    newButton.style.fontSize = "20px";
+    newButton.innerHTML = sticker;
+    buttonsContainer.append(newButton);
+
+    newButton.addEventListener("click", function () {
+        const toolMovedEvent = new CustomEvent ("tool-moved",
+            { detail: { sticker: sticker}
+        });
+        
+        webCanvas.dispatchEvent(toolMovedEvent);
+    });
+
+    stickerArray.push(sticker);
 }
