@@ -131,7 +131,9 @@ function createStickerPreview(mouseX: number, mouseY: number, sticker: string): 
         display: (context: CanvasRenderingContext2D) => {
             context.save();
             context.font = "40px Arial";
-            context.fillText(sticker, mouseX, mouseY);
+            context.translate(mouseX, mouseY);
+            context.rotate(currentRotation);
+            context.fillText(sticker, 0, 0);
             context.restore();
         }
     }
@@ -158,11 +160,16 @@ function createStroke(): Displayable & { addPoint (x: number, y: number): void }
 }
 
 function createSticker(mouseX: number, mouseY: number, sticker: string): Displayable {
-
+    let rotationOffset = currentRotation;
+    
     return {
         display: (context: CanvasRenderingContext2D) => {
+            context.save();
             context.font = "40px Arial";
-            context.fillText(sticker, mouseX, mouseY);
+            context.translate(mouseX, mouseY);
+            context.rotate(rotationOffset);
+            context.fillText(sticker, 0, 0);
+            context.restore();
         }
     }
 }
@@ -313,7 +320,7 @@ thiccButton.addEventListener("click", () => {
 });
 
 customButton.addEventListener("click", () => {
-    const customPrompt = String(window.prompt("Create a custom sticker:", "Insert text or emoji here... if you dare"));
+    const customPrompt = String(window.prompt("Create a custom sticker:", "insert text or emoji here... if you dare"));
 
     if (customPrompt)
     {
@@ -351,6 +358,8 @@ for (let i = 0; i < stickerArray.length; i++)
     createButton(stickerArray[i]);
 }
 
+let currentRotation = 0;
+
 function createButton (sticker: string) {
     const newButton = document.createElement("button");
 
@@ -378,3 +387,25 @@ function createButton (sticker: string) {
 
     stickerArray.push(sticker);
 }
+
+
+const rotateLabel = document.createElement("label");
+rotateLabel.innerHTML = "rotate";
+app.append(rotateLabel);
+
+const rotateSlider = document.createElement("input");
+rotateSlider.type = "range";
+rotateSlider.name = "rotation";
+rotateSlider.min = "0";
+rotateSlider.max = "360";
+app.append(rotateSlider);
+
+const rotateSliderLabel = document.createElement("label");
+rotateSlider.valueAsNumber = currentRotation;
+rotateSliderLabel.innerHTML = ""+rotateSlider.valueAsNumber;
+app.append(rotateSliderLabel);
+
+rotateSlider.addEventListener("input", function () {
+    currentRotation = rotateSlider.valueAsNumber;
+    rotateSliderLabel.innerHTML = ""+rotateSlider.valueAsNumber;
+});
