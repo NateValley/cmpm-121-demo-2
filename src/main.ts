@@ -16,22 +16,26 @@ webCanvas.width = 256;
 webCanvas.height = 256;
 app.append(webCanvas);
 
-const context = <CanvasRenderingContext2D>webCanvas.getContext("2d");
+const context = <CanvasRenderingContext2D> webCanvas.getContext("2d");
 
 const buttonsContainer = document.createElement("div");
-buttonsContainer.style.maxHeight = "60px";
-buttonsContainer.style.display = "flex";
-buttonsContainer.style.margin = "20px";
-buttonsContainer.style.justifyContent = "space-between";
-buttonsContainer.style.columnGap = "10px";
+buttonsContainer.style.cssText = `
+    maxHeight: 60px;
+    display: flex;
+    margin: 20px;
+    justifyContent: space-between;
+    columnGap: 10px
+`;
 app.append(buttonsContainer);
 
 const stickersContainer = document.createElement("div");
-stickersContainer.style.maxWidth = "60px";
-stickersContainer.style.display = "flex";
-stickersContainer.style.margin = "20px";
-stickersContainer.style.justifyContent = "space-between";
-stickersContainer.style.columnGap = "10px";
+stickersContainer.style.cssText = `
+    maxWidth: 60px;
+    display: flex;
+    margin: 20px;
+    justifyContent: space-between;
+    columnGap: 10px 
+`;
 app.append(stickersContainer);
 
 // Clear Button
@@ -64,33 +68,33 @@ interface buttonItem {
 const buttonArray: buttonItem[] = [
     {
         button: clearButton,
-        buttonLabel: "Clear"
+        buttonLabel: "Clear",
     },
     {
         button: undoButton,
-        buttonLabel: "Undo"
+        buttonLabel: "Undo",
     },
     {
         button: redoButton,
-        buttonLabel: "Redo"
+        buttonLabel: "Redo",
     },
     {
         button: thinButton,
-        buttonLabel: "Thin"
+        buttonLabel: "Thin",
     },
     {
         button: thiccButton,
-        buttonLabel: "Thicc"
+        buttonLabel: "Thicc",
     },
     {
         button: customButton,
-        buttonLabel: "+"
+        buttonLabel: "+",
     },
     {
         button: exportButton,
-        buttonLabel: "Export (.PNG)"
-    }
-]
+        buttonLabel: "Export (.PNG)",
+    },
+];
 
 // Drawing Variables
 let isDrawing = false;
@@ -99,7 +103,7 @@ let currentWidth: number = 2;
 
 // Sticker Variables
 let currentSticker: ReturnType<typeof createSticker> | null = null;
-let stickerArray: string[] = ["🐀", "🦇", "🐈‍⬛"];
+const stickerArray: string[] = ["🐀", "🦇", "🐈‍⬛"];
 let lastSticker: string;
 
 // Displayable Variables
@@ -107,26 +111,27 @@ let displayArray: Displayable[] = [];
 let undoneDisplays: Displayable[] = [];
 let activeToolPreview: Displayable | null = null;
 
-
-
+// An interface for all objects drawn onto the canvas
 interface Displayable {
-    display (context: CanvasRenderingContext2D): void;
+    display(context: CanvasRenderingContext2D): void;
 }
 
+// Draws a transparent circle of the brush size where mouseX, mouseY is
 function createToolPreview(mouseX: number, mouseY: number): Displayable {
     return {
         display: (context: CanvasRenderingContext2D) => {
             context.save();
             //context.lineWidth = currentWidth;
             context.beginPath();
-            context.arc(mouseX, mouseY, currentWidth ,0, Math.PI * 2);
+            context.arc(mouseX, mouseY, currentWidth, 0, Math.PI * 2);
             context.fillStyle = "rgba(0, 0, 0, 0.3)";
             context.fill();
             context.restore();
-        }
+        },
     };
 }
 
+// Draws the selected sticker where mouseX, mouseY
 function createStickerPreview(mouseX: number, mouseY: number, sticker: string): Displayable {
     return {
         display: (context: CanvasRenderingContext2D) => {
@@ -136,11 +141,12 @@ function createStickerPreview(mouseX: number, mouseY: number, sticker: string): 
             context.rotate(currentRotation);
             context.fillText(sticker, 0, 0);
             context.restore();
-        }
-    }
+        },
+    };
 }
 
-function createStroke(): Displayable & { addPoint (x: number, y: number): void } {
+// Holds all points that make a line, with the ability to display the line  
+function createStroke(): Displayable & {addPoint(x: number, y: number): void;} {
     const points: { x: number; y: number }[] = [];
     const width = currentWidth;
 
@@ -148,7 +154,14 @@ function createStroke(): Displayable & { addPoint (x: number, y: number): void }
         if (points.length < 2) return;
 
         for (let i = 0; i < points.length - 1; i++) {
-            drawLine(context, points[i].x, points[i].y, points[i+1].x, points[i+1].y, width);
+            drawLine(
+                context,
+                points[i].x,
+                points[i].y,
+                points[i + 1].x,
+                points[i + 1].y,
+                width,
+            );
         }
     }
 
@@ -156,13 +169,14 @@ function createStroke(): Displayable & { addPoint (x: number, y: number): void }
         display,
         addPoint: (x: number, y: number): void => {
             points.push({ x, y });
-        }
+        },
     };
 }
 
+// Draws a sticker onto the canvas
 function createSticker(mouseX: number, mouseY: number, sticker: string): Displayable {
-    let rotationOffset = currentRotation;
-    
+    const rotationOffset = currentRotation;
+
     return {
         display: (context: CanvasRenderingContext2D) => {
             context.save();
@@ -171,16 +185,18 @@ function createSticker(mouseX: number, mouseY: number, sticker: string): Display
             context.rotate(rotationOffset);
             context.fillText(sticker, 0, 0);
             context.restore();
-        }
-    }
+        },
+    };
 }
 
+// Calls display on all of the displayables in the displayArray
 function displayAll(context: CanvasRenderingContext2D) {
     context.clearRect(0, 0, 256, 256);
-    displayArray.forEach(stroke => stroke.display(context));
+    displayArray.forEach((stroke) => stroke.display(context));
 }
 
-function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width: number) {
+// Draws a line form x1,y1 to x2,y2
+function drawLine(context: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width: number) {
     context.beginPath();
     context.strokeStyle = "black";
     context.lineWidth = width;
@@ -190,67 +206,59 @@ function drawLine (context: CanvasRenderingContext2D, x1: number, y1: number, x2
     context.closePath();
 }
 
-webCanvas.addEventListener("drawing-changed", (event) => {
+// Redraws all lines and checks if the undo/redo buttons should be enabled or not
+webCanvas.addEventListener("drawing-changed", () => {
     displayAll(context);
     activeToolPreview?.display(context);
-    
+
     if (displayArray.length != 0) {
         undoButton.disabled = false;
-    }
-    else
-    {
+    } else {
         undoButton.disabled = true;
     }
 
     if (undoneDisplays.length != 0) {
         redoButton.disabled = false;
-    }
-    else
-    {
+    } else {
         redoButton.disabled = true;
     }
 });
 
+// Redraws the canvas along with the tool preview being drawn as well
 webCanvas.addEventListener("tool-moved", (event) => {
     const detail = (event as CustomEvent).detail;
     const { x, y, sticker } = detail;
 
-    if(sticker)
-    {
+    if (sticker) {
         lastSticker = sticker;
         console.log(sticker);
     }
 
     if (!isDrawing) {
-
-        if (!lastSticker)
-        {
+        if (!lastSticker) {
             activeToolPreview = createToolPreview(x, y);
-        }
-        else
-        {
+        } else {
             activeToolPreview = createStickerPreview(x, y, lastSticker);
         }
 
         displayAll(context);
         webCanvas.style.cursor = "none";
-    }
-    else
-    {
+    } else {
         webCanvas.style.cursor = "default";
     }
 });
 
+// Places a sticker if selected, or start drawing a line
 webCanvas.addEventListener("mousedown", (event) => {
-
-    if (lastSticker)
-    {
-        currentSticker = createSticker(event.offsetX, event.offsetY, lastSticker);
+    if (lastSticker) {
+        currentSticker = createSticker(
+            event.offsetX,
+            event.offsetY,
+            lastSticker,
+        );
         displayArray.push(currentSticker);
         lastSticker = "";
-    }
-    else
-    {
+    } else {
         currentStroke = createStroke();
         currentStroke.addPoint(event.offsetX, event.offsetY);
         displayArray.push(currentStroke);
@@ -261,15 +269,16 @@ webCanvas.addEventListener("mousedown", (event) => {
     activeToolPreview = null;
 });
 
+// Continues drawing a line
 webCanvas.addEventListener("mousemove", (event) => {
     const rect = webCanvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
 
     const toolMovedEvent = new CustomEvent("tool-moved", {
-        detail: { x: mouseX, y: mouseY }
+        detail: { x: mouseX, y: mouseY },
     });
-    
+
     webCanvas.dispatchEvent(toolMovedEvent);
 
     if (isDrawing && currentStroke) {
@@ -279,62 +288,81 @@ webCanvas.addEventListener("mousemove", (event) => {
     webCanvas.dispatchEvent(changedEvent);
 });
 
-globalThis.addEventListener("mouseup", (event) => {
+// Stops drawing the line
+globalThis.addEventListener("mouseup", () => {
     if (isDrawing) {
         isDrawing = false;
         currentStroke = null;
     }
 });
 
+// ----- Clear Button -----
+// Clears the canvas, displayArray, and undoneDisplays
 clearButton.addEventListener("click", () => {
     context.clearRect(0, 0, 256, 256);
     displayArray = [];
     undoneDisplays = [];
 });
 
+// ----- Undo Button -----
+// Pops the most recent display object from DisplayArray
+// to undoneDisplay and refreshes the canvas
 undoButton.addEventListener("click", () => {
-    if (displayArray.length != 0)
-    {
+    if (displayArray.length != 0) {
         undoneDisplays.push(displayArray.pop()!);
         webCanvas.dispatchEvent(changedEvent);
     }
 });
 
+// ----- Redo Button -----
+// Pops the most recent display object from undoneDisplay
+// back to DisplayArray and refreshes the canvas
 redoButton.addEventListener("click", () => {
-    if (undoneDisplays.length != 0)
-    {
+    if (undoneDisplays.length != 0) {
         displayArray.push(undoneDisplays.pop()!);
         webCanvas.dispatchEvent(changedEvent);
     }
 });
 
+// ----- Thin Button -----
+// Sets the player brush size to a preset thin brush
 thinButton.addEventListener("click", () => {
     currentWidth = 2;
     thinButton.disabled = true;
     thiccButton.disabled = false;
 });
 
+// ----- Thicc Button -----
+// Sets the player brush size to a preset thicc brush
 thiccButton.addEventListener("click", () => {
     currentWidth = 4;
     thiccButton.disabled = true;
     thinButton.disabled = false;
 });
 
+// ----- Create Sticker -----
+// Creates a button with the user input (Emojis or text)
 customButton.addEventListener("click", () => {
-    const customPrompt = String(window.prompt("Create a custom sticker:", "insert text or emoji here... if you dare"));
+    const customPrompt = String(
+        window.prompt(
+            "Create a custom sticker:",
+            "insert text or emoji here... if you dare",
+        ),
+    );
 
-    if (customPrompt)
-    {
+    if (customPrompt) {
         createButton(customPrompt);
         customButton.remove();
         stickersContainer.append(customButton);
     }
 });
 
+// ----- Export -----
+// Redraws everything onto a larger canvas and downloads
 exportButton.addEventListener("click", () => {
-    let tempCanvas = document.createElement("canvas");
-    let tempContext = <CanvasRenderingContext2D>tempCanvas.getContext("2d");
-    
+    const tempCanvas = document.createElement("canvas");
+    const tempContext = <CanvasRenderingContext2D> tempCanvas.getContext("2d");
+
     tempCanvas.width = 1024;
     tempCanvas.height = 1024;
 
@@ -347,21 +375,25 @@ exportButton.addEventListener("click", () => {
     anchor.click();
 });
 
+// ------------------------------
+// ----- Append UI -----
+// ------------------------------
+// Append and display all interactible user items
+// Append all buttons
 for (let i = 0; i < buttonArray.length; i++) {
-
     buttonArray[i].button.style.fontSize = "18px";
     buttonArray[i].button.innerHTML = buttonArray[i].buttonLabel;
     buttonsContainer.append(buttonArray[i].button);
 }
 
-for (let i = 0; i < stickerArray.length; i++)
-{
+// -- Stickers --
+// Append all of the stickers
+for (let i = 0; i < stickerArray.length; i++) {
     createButton(stickerArray[i]);
 }
 
-let currentRotation = 0;
-
-function createButton (sticker: string) {
+// Creates a new sticker button with provided text
+function createButton(sticker: string) {
     const newButton = document.createElement("button");
 
     newButton.style.fontSize = "20px";
@@ -369,17 +401,15 @@ function createButton (sticker: string) {
     stickersContainer.append(newButton);
 
     newButton.addEventListener("click", function () {
-        const toolMovedEvent = new CustomEvent ("tool-moved",
-            { detail: { sticker: sticker}
+        const toolMovedEvent = new CustomEvent("tool-moved", {
+            detail: { sticker: sticker },
         });
-        
+
         webCanvas.dispatchEvent(toolMovedEvent);
     });
 
-    for (let i = 0; i < stickerArray.length; i++)
-    {
-        if (stickerArray[i] == sticker)
-        {
+    for (let i = 0; i < stickerArray.length; i++) {
+        if (stickerArray[i] == sticker) {
             customButton.remove();
             stickersContainer.append(customButton);
             return;
@@ -389,6 +419,8 @@ function createButton (sticker: string) {
     stickerArray.push(sticker);
 }
 
+// -- Slider --
+let currentRotation = 0;
 
 const rotateLabel = document.createElement("label");
 rotateLabel.innerHTML = "rotate";
@@ -403,10 +435,10 @@ app.append(rotateSlider);
 
 const rotateSliderLabel = document.createElement("label");
 rotateSlider.valueAsNumber = currentRotation;
-rotateSliderLabel.innerHTML = ""+rotateSlider.valueAsNumber;
+rotateSliderLabel.innerHTML = "" + rotateSlider.valueAsNumber;
 app.append(rotateSliderLabel);
 
 rotateSlider.addEventListener("input", function () {
     currentRotation = rotateSlider.valueAsNumber;
-    rotateSliderLabel.innerHTML = ""+rotateSlider.valueAsNumber;
+    rotateSliderLabel.innerHTML = "" + rotateSlider.valueAsNumber;
 });
