@@ -117,8 +117,9 @@ function createToolPreview(mouseX: number, mouseY: number): Displayable {
     return {
         display: (context: CanvasRenderingContext2D) => {
             context.save();
+            //context.lineWidth = currentWidth;
             context.beginPath();
-            context.arc(mouseX, mouseY, 10 ,0, Math.PI * 2);
+            context.arc(mouseX, mouseY, currentWidth ,0, Math.PI * 2);
             context.fillStyle = "rgba(0, 0, 0, 0.3)";
             context.fill();
             context.restore();
